@@ -1,359 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Optimized Draggable Elements in Resizable Container</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.18.0/cdn/themes/light.css" />
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.18.0/cdn/shoelace-autoloader.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juana's Coffee</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: Arial, sans-serif;
-        }
-
-        #main-wrapper {
-            display: flex;
-            height: 100vh;
-            width: 100vw;
-        }
-
-        #sidebar {
-            width: 250px;
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-
-        #sidebar h2 {
-            margin-top: 0;
-            font-size: 1.5em;
-            text-align: center;
-        }
-
-        .component-list {
-            list-style: none;
-            padding: 0;
-            margin: 20px 0 0 0;
-        }
-
-        .component-list li {
-            margin-bottom: 10px;
-        }
-
-        .component-list sl-button {
-            width: 100%;
-            text-align: left;
-        }
-
-        #center-container {
-            flex-grow: 1;
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f0f0f0;
-            overflow: hidden;
-            position: relative;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
         }
-
-        #aspect-ratio-container {
-            width: 100%;
-            max-width: 1500px;
-            height: 800px;
-            background-color: white;
-            position: relative;
-            border: 2px solid #ccc;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            resize: horizontal;
-            min-width: 300px;
-            box-sizing: border-box;
+        .content {
+            max-width: 600px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
         }
-
-        .draggable {
-            position: absolute;
-            cursor: grab;
-            z-index: 1;
-            transition: left 0.2s, top 0.2s;
+        h1 {
+            margin-top: 0;
+            color: #4b2e39;
         }
-
-        .draggable:active {
-            cursor: grabbing;
-        }
-
-        #snaplines {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .snapline {
-            stroke: #6832E3;
-            stroke-width: 1;
-            stroke-dasharray: 5,5;
+        p {
+            font-size: 1.2em;
+            color: #555;
         }
     </style>
 </head>
 <body>
-    <div id="main-wrapper">
-        <div id="sidebar">
-            <h2>Components</h2>
-            <ul class="component-list">
-                <li>
-                    <sl-button variant="primary" id="add-badge">Add Badge</sl-button>
-                </li>
-                <li>
-                    <sl-button variant="primary" id="add-button">Add Button</sl-button>
-                </li>
-                <li>
-                    <sl-button variant="primary" id="add-card">Add Card</sl-button>
-                </li>
-            </ul>
-        </div>
-
-        <div id="center-container">
-            <div id="aspect-ratio-container">
-                <svg id="snaplines"></svg>
-            </div>
-        </div>
+    <div class="content">
+        <h1>Juana's Coffee</h1>
+        <p>Somos um ecossistema de vivências, estudos e sabores reais. Junte-se a Juanas.</p>
     </div>
-
-    <script>
-        const aspectRatioContainer = document.getElementById('aspect-ratio-container');
-        const snaplinesSVG = document.getElementById('snaplines');
-        const snapDistance = 1; 
-        let offsetX, offsetY, currentElement, lastSnap;
-
-        function initializeDraggable(el) {
-            el.addEventListener('mousedown', startDrag);
-            el.addEventListener('touchstart', startDrag, { passive: false });
-        }
-
-        document.getElementById('add-badge').addEventListener('click', () => addComponent('badge'));
-        document.getElementById('add-button').addEventListener('click', () => addComponent('button'));
-        document.getElementById('add-card').addEventListener('click', () => addComponent('card'));
-
-        function addComponent(type) {
-            let newEl;
-            const defaultSize = { width: 100, height: 40 };
-
-            switch(type) {
-                case 'badge':
-                    newEl = document.createElement('sl-badge');
-                    newEl.textContent = 'Badge';
-                    break;
-                case 'button':
-                    newEl = document.createElement('sl-button');
-                    newEl.size = 'small';
-                    newEl.textContent = 'Click me';
-                    break;
-                case 'card':
-                    newEl = document.createElement('sl-card');
-                    newEl.textContent = 'Card';
-                    break;
-                default:
-                    return;
-            }
-
-            newEl.classList.add('draggable');
-
-            const containerRect = aspectRatioContainer.getBoundingClientRect();
-            const left = (containerRect.width / 2) - (defaultSize.width / 2);
-            const top = (containerRect.height / 2) - (defaultSize.height / 2);
-
-            newEl.style.left = `${left}px`;
-            newEl.style.top = `${top}px`;
-
-            newEl.dataset.ratioLeft = left / containerRect.width;
-            newEl.dataset.ratioTop = top / containerRect.height;
-
-            aspectRatioContainer.appendChild(newEl);
-            initializeDraggable(newEl);
-        }
-
-        function startDrag(e) {
-            e.preventDefault();
-            currentElement = e.target;
-            currentElement.style.transition = 'none';
-
-            const elemRect = currentElement.getBoundingClientRect();
-            const isTouch = e.type === 'touchstart';
-            const startX = isTouch ? e.touches[0].clientX : e.clientX;
-            const startY = isTouch ? e.touches[0].clientY : e.clientY;
-            offsetX = startX - elemRect.left;
-            offsetY = startY - elemRect.top;
-
-            document.addEventListener(isTouch ? 'touchmove' : 'mousemove', drag);
-            document.addEventListener(isTouch ? 'touchend' : 'mouseup', stopDrag);
-        }
-
-        function drag(e) {
-            const isTouch = e.type === 'touchmove';
-            const clientX = isTouch ? e.touches[0].clientX : e.clientX;
-            const clientY = isTouch ? e.touches[0].clientY : e.clientY;
-
-            const containerRect = aspectRatioContainer.getBoundingClientRect();
-            let mouseX = clientX - containerRect.left - offsetX;
-            let mouseY = clientY - containerRect.top - offsetY;
-
-            mouseX = Math.max(0, Math.min(mouseX, containerRect.width - currentElement.offsetWidth));
-            mouseY = Math.max(0, Math.min(mouseY, containerRect.height - currentElement.offsetHeight));
-
-            currentElement.style.left = `${mouseX}px`;
-            currentElement.style.top = `${mouseY}px`;
-            checkSnaplines(mouseX, mouseY);
-        }
-
-        function stopDrag(e) {
-            document.removeEventListener(e.type === 'touchend' ? 'touchmove' : 'mousemove', drag);
-            document.removeEventListener(e.type === 'touchend' ? 'touchend' : 'mouseup', stopDrag);
-            clearSnaplines();
-            lastSnap = null;
-
-            currentElement.style.transition = 'left 0.2s, top 0.2s';
-
-            const containerRect = aspectRatioContainer.getBoundingClientRect();
-            const leftPx = parseFloat(currentElement.style.left);
-            const topPx = parseFloat(currentElement.style.top);
-
-            currentElement.dataset.ratioLeft = leftPx / containerRect.width;
-            currentElement.dataset.ratioTop = topPx / containerRect.height;
-        }
-
-        function clearSnaplines() {
-            while (snaplinesSVG.firstChild) snaplinesSVG.firstChild.remove();
-        }
-
-        function checkSnaplines(x, y) {
-            clearSnaplines();
-            const movingRect = getRect(x, y, currentElement);
-            const otherDraggables = aspectRatioContainer.querySelectorAll('.draggable');
-
-            otherDraggables.forEach(el => {
-                if (el !== currentElement) {
-                    const targetRect = getRect(parseInt(el.style.left), parseInt(el.style.top), el);
-                    handleSnapping(movingRect, targetRect, x, y);
-                }
-            });
-        }
-
-        function getRect(x, y, el) {
-            return {
-                left: x,
-                right: x + el.offsetWidth,
-                top: y,
-                bottom: y + el.offsetHeight,
-                centerX: x + el.offsetWidth / 2,
-                centerY: y + el.offsetHeight / 2,
-            };
-        }
-
-        function handleSnapping(movingRect, targetRect, x, y) {
-            const alignments = [
-                { m: 'left', t: 'left', snapType: 'horizontal', priority: 1 },
-                { m: 'right', t: 'right', snapType: 'horizontal', priority: 1 },
-                { m: 'left', t: 'right', snapType: 'horizontal', priority: 2 },
-                { m: 'right', t: 'left', snapType: 'horizontal', priority: 2 },
-                { m: 'centerX', t: 'centerX', snapType: 'horizontal', priority: 3 }
-            ];
-
-            const vertAlignments = [
-                { m: 'top', t: 'top', snapType: 'vertical', priority: 1 },
-                { m: 'bottom', t: 'bottom', snapType: 'vertical', priority: 1 },
-                { m: 'top', t: 'bottom', snapType: 'vertical', priority: 2 },
-                { m: 'bottom', t: 'top', snapType: 'vertical', priority: 2 },
-                { m: 'centerY', t: 'centerY', snapType: 'vertical', priority: 3 }
-            ];
-
-            const alignedSides = { horizontal: false, vertical: false };
-
-            const sortedAlignments = alignments.slice().sort((a, b) => a.priority - b.priority);
-            const sortedVertAlignments = vertAlignments.slice().sort((a, b) => a.priority - b.priority);
-
-            sortedAlignments.forEach(({ m, t, snapType }) => {
-                if (alignedSides[snapType]) return;
-                if (Math.abs(movingRect[m] - targetRect[t]) <= snapDistance) {
-                    const snapX = adjustPosition(movingRect, targetRect, m, t, 'left');
-                    currentElement.style.left = `${snapX}px`;
-                    drawSnapline(
-                        targetRect[t],
-                        Math.min(movingRect.top, targetRect.top),
-                        targetRect[t],
-                        Math.max(movingRect.bottom, targetRect.bottom)
-                    );
-                    alignedSides[snapType] = true;
-                }
-            });
-
-            sortedVertAlignments.forEach(({ m, t, snapType }) => {
-                if (alignedSides[snapType]) return;
-                if (Math.abs(movingRect[m] - targetRect[t]) <= snapDistance) {
-                    const snapY = adjustPosition(movingRect, targetRect, m, t, 'top');
-                    currentElement.style.top = `${snapY}px`;
-                    drawSnapline(
-                        Math.min(movingRect.left, targetRect.left),
-                        targetRect[t],
-                        Math.max(movingRect.right, targetRect.right),
-                        targetRect[t]
-                    );
-                    alignedSides[snapType] = true;
-                }
-            });
-        }
-
-        function adjustPosition(movingRect, targetRect, m, t, direction) {
-            switch (`${m}-${t}`) {
-                case 'left-left': return targetRect.left;
-                case 'left-right': return targetRect.right;
-                case 'right-left': return targetRect.left - currentElement.offsetWidth;
-                case 'right-right': return targetRect.right - currentElement.offsetWidth;
-                case 'centerX-centerX': return targetRect.centerX - currentElement.offsetWidth / 2;
-                case 'top-top': return targetRect.top;
-                case 'top-bottom': return targetRect.bottom;
-                case 'bottom-top': return targetRect.top - currentElement.offsetHeight;
-                case 'bottom-bottom': return targetRect.bottom - currentElement.offsetHeight;
-                case 'centerY-centerY': return targetRect.centerY - currentElement.offsetHeight / 2;
-                default: return direction === 'left' ? movingRect.left : movingRect.top;
-            }
-        }
-
-        function drawSnapline(x1, y1, x2, y2) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', x1);
-            line.setAttribute('y1', y1);
-            line.setAttribute('x2', x2);
-            line.setAttribute('y2', y2);
-            line.setAttribute('class', 'snapline');
-            snaplinesSVG.appendChild(line);
-        }
-
-        const resizeObserver = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                const { width, height } = entry.contentRect;
-                snaplinesSVG.setAttribute('width', width);
-                snaplinesSVG.setAttribute('height', height);
-
-                const draggables = aspectRatioContainer.querySelectorAll('.draggable');
-                draggables.forEach(el => {
-                    let newLeft = width * parseFloat(el.dataset.ratioLeft);
-                    let newTop = height * parseFloat(el.dataset.ratioTop);
-
-                    newLeft = Math.max(0, Math.min(newLeft, width - el.offsetWidth));
-                    newTop = Math.max(0, Math.min(newTop, height - el.offsetHeight));
-
-                    el.style.left = `${newLeft.toFixed(6)}px`;
-                    el.style.top = `${newTop.toFixed(6)}px`;
-                });
-            }
-        });
-        resizeObserver.observe(aspectRatioContainer);
-    </script>
 </body>
 </html>
